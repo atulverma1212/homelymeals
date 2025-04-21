@@ -5,10 +5,13 @@ import org.bits.pilani.homely.dto.OrderRequest;
 import org.bits.pilani.homely.entity.Order;
 import org.bits.pilani.homely.entity.OrderItem;
 import org.bits.pilani.homely.entity.StockItem;
+import org.bits.pilani.homely.entity.User;
 import org.bits.pilani.homely.enums.OrderStatus;
 import org.bits.pilani.homely.exception.InvalidOrderException;
 import org.bits.pilani.homely.exception.OrderNotFoundException;
 import org.bits.pilani.homely.exception.StockItemNotFoundException;
+import org.bits.pilani.homely.notification.StateChangeListener;
+import org.bits.pilani.homely.notification.StateChangeNotifier;
 import org.bits.pilani.homely.repository.OrderRepository;
 import org.bits.pilani.homely.repository.StockItemRepository;
 import org.bits.pilani.homely.state.OrderStateFactory;
@@ -35,6 +38,13 @@ public class OrderService {
     private final OrderRequestValidator orderRequestValidator;
     private final OrderStateTransitionService stateTransitionService;
     private final OrderStateFactory orderStateFactory;
+    private final UserService userService;
+    private final StateChangeNotifier stateChangeNotifier = new StateChangeNotifier();
+    private final NotificationService notificationService;
+
+    public void addStateChangeListener(StateChangeListener listener) {
+        stateChangeNotifier.addListener(listener);
+    }
 
     @Transactional
     public Order createOrder(OrderRequest request) {
@@ -54,8 +64,11 @@ public class OrderService {
             throw new InvalidOrderException("Order must contain at least one item");
         }
         Order order = new Order();
-        order.setCustomerId(request.getCustomerId());
-        order.setCustomerName(request.getCustomerName());
+
+        User customerUser = userService.getCustomerById(request.getCustomerId());
+
+        order.setCustomer(customerUser);
+        order.setCustomerName(customerUser.getUsername());
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.PENDING);
 
@@ -82,10 +95,13 @@ public class OrderService {
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
 
-        return orderRepository.save(order);
+        Order save = orderRepository.save(order);
+        // Send notification to admin
+        notificationService.sendOrderNotification("New order created: " + order.getId());
+        return save;
     }
 
-    public List<Order> getCustomerOrders(String customerId) {
+    public List<Order> getCustomerOrders(Long customerId) {
         return orderRepository.findByCustomerId(customerId);
     }
 
@@ -108,7 +124,11 @@ public class OrderService {
                 .ifPresent(orderState -> orderState.handle(order));
 
         order.setStatus(status);
-        return orderRepository.save(order);
+        Order save = orderRepository.save(order);
+
+        stateChangeNotifier.notifyListeners(save);
+
+        return save;
     }
 
     public void getAllOrders(String status, Model model) {

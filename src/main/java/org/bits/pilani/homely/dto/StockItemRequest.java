@@ -1,21 +1,13 @@
-package org.bits.pilani.homely.entity;
+package org.bits.pilani.homely.dto;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.bits.pilani.homely.enums.StockCategory;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "stock_items")
 @Data
-public class StockItem {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class StockItemRequest {
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must not exceed 100 characters")
@@ -28,10 +20,8 @@ public class StockItem {
     @NotBlank(message = "Unit is required")
     @Size(max = 50, message = "Unit must not exceed 50 characters")
     private String unit;
-    private LocalDateTime lastUpdated;
 
     @NotNull(message = "Category is required")
-    @Enumerated(EnumType.STRING)
     private StockCategory category;
 
     @NotNull(message = "Price is required")
@@ -40,5 +30,4 @@ public class StockItem {
     private BigDecimal price;
 
     private String imageUrl;
-
 }

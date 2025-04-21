@@ -19,7 +19,7 @@ public class SettingService {
 
     public String getSetting(String key) {
         return settingRepository.findById(key)
-                .map(setting -> setting.getValue())
+                .map(Setting::getValue)
                 .orElse(null);
     }
 
@@ -28,6 +28,10 @@ public class SettingService {
                         .orElseThrow(() -> new HomelyException("Setting not found", "SETTING_NOT_FOUND"));
         setting.setValue(value);
         return settingRepository.save(setting);
+    }
+
+    public boolean isSettingEnabled(String key) {
+        return Boolean.parseBoolean(getSetting(key));
     }
 
     //get all

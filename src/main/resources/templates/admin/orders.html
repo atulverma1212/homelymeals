@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <title>Order</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .toast-container {
+            z-index: 1056;
+        }
+
+        .toast {
+            min-width: 300px;
+        }
+
+        .toast-header {
+            background-color: #0d6efd !important;
+        }
+
+        .btn-close-white {
+            filter: brightness(0) invert(1);
+        }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -20,6 +37,11 @@
                 <li class="nav-item">
                     <a class="nav-link active" th:href="@{/admin/orders}">Orders</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/settings}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
             </ul>
             <form th:action="@{/logout}" method="post" class="d-flex">
                 <button class="btn btn-outline-light" type="submit">Logout</button>
@@ -27,6 +49,17 @@
         </div>
     </div>
 </nav>
+
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-primary text-white">
+            <strong class="me-auto">New Order</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="notificationMessage">
+        </div>
+    </div>
+</div>
 
 <div class="container mt-4">
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
@@ -131,6 +164,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+
+
 <script>
     function viewOrderItems(orderId) {
         fetch(`/admin/orders/${orderId}`)
@@ -212,6 +250,58 @@
                 alert('Failed to update status');
             });
     }
+
+    //     Websockets implementation
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Wait for the page to fully load
+        const connectWebSocket = () => {
+            try {
+                const socket = new SockJS('/ws');
+                const stompClient = Stomp.over(socket);
+                const toastElement = document.getElementById('notificationToast');
+                // Configure toast with longer duration (10 seconds)
+                const toast = new bootstrap.Toast(toastElement, {
+                    animation: true,
+                    autohide: true,
+                    delay: 3000 // 10 seconds
+                });
+
+                stompClient.connect({}, function (frame) {
+                    console.log('Connected to WebSocket');
+
+                    stompClient.subscribe('/topic/admin-notifications', function (message) {
+                        console.log('Received:', message.body);
+                        document.getElementById('notificationMessage').textContent = message.body;
+                        toast.show();
+
+                        if (window.location.pathname === '/admin/orders') {
+                            setTimeout(() => window.location.reload(), 5000);
+                        }
+                    });
+                }, function (error) {
+                    console.error('WebSocket error:', error);
+                    setTimeout(connectWebSocket, 5000);
+                });
+
+                return stompClient;
+            } catch (error) {
+                console.error('WebSocket connection failed:', error);
+                setTimeout(connectWebSocket, 5000);
+            }
+        };
+
+        // Initialize WebSocket connection
+        let stompClient = connectWebSocket();
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+        });
+    });
 </script>
 </body>
 </html>
