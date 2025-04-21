@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Kitchen Stock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--    <link href="/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet">-->
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">Kitchen Admin</a>
+        <button classbs-target="#navbarContent" aria-controls="navbarContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/admin/dashboard}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/orders}">Orders</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/settings}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+
+            </ul>
+            <form th:action="@{/logout}" method="post" class="d-flex">
+                <button class="btn btn-outline-light" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <!-- Alert Messages -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <h2>Kitchen Stock Management</h2>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Current Stock</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        Add New Item
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${stockItems}"
+                            th:class="${item.quantity <= lowThreshold ? 'table-danger' : ''}">
+                            <td th:text="${item.name}">Rice</td>
+                            <td th:text="${item.category}">Grains</td>
+                            <td>
+                                <span th:text="${item.quantity}"
+                                      th:class="${item.quantity <= lowThreshold ? 'text-danger fw-bold' : ''}">
+                                </span>
+                            </td>
+                            <td th:text="${item.unit}">kg</td>
+                            <td th:text="${#numbers.formatDecimal(item.price, 1, 2)}">100.00</td>
+                            <td th:text="${#temporals.format(item.lastUpdated, 'dd-MM-yyyy HH:mm')}">01-01-2024</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning me-1"
+                                        th:onclick="'editItem(' + ${item.id} + ')'">Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger"
+                                        th:attr="onclick=|confirmDelete(${item.id}, '${#strings.escapeJavaScript(item.name)}')|">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Stock Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/admin/stock/add}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Item Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category" required>
+                            <option th:each="category : ${categories}"
+                                    th:value="${category}"
+                                    th:text="${category.displayName}">Category
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantity" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit</label>
+                        <input type="text" class="form-control" name="unit" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" name="price"
+                                   required min="0" step="0.01"
+                                   pattern="^\d+(\.\d{0,2})?$">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div class="modal fade" id="editItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Stock Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Edit Item Modal Form -->
+            <form th:action="@{/admin/stock/update}" method="post" class="needs-validation" novalidate>
+                <div class="modal-body">
+                    <input type="hidden" id="editId" name="id">
+                    <div class="mb-3">
+                        <label class="form-label">Item Name</label>
+                        <input type="text" class="form-control" id="editName" name="name"
+                               required minlength="5" maxlength="100" pattern="^[a-zA-Z0-9\s-]+$">
+                        <div class="invalid-feedback">
+                            Please enter a valid item name (letters, numbers, spaces and hyphens only)
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="editCategory" name="category" required>
+                            <option value="">Select a category</option>
+                            <option th:each="category : ${categories}"
+                                    th:value="${category}"
+                                    th:text="${category.displayName}">Category
+                            </option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a category
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="editQuantity" name="quantity"
+                               required min="0" step="0.01">
+                        <div class="invalid-feedback">
+                            Please enter a valid quantity (minimum 0)
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit</label>
+                        <input type="text" class="form-control" id="editUnit" name="unit"
+                               required maxlength="50" pattern="^[a-zA-Z]+$">
+                        <div class="invalid-feedback">
+                            Please enter a valid unit (letters only)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" id="editPrice" name="price"
+                                   required min="0" step="0.01"
+                                   pattern="^\d+(\.\d{0,2})?$">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <span id="deleteItemName" class="fw-bold"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" th:action="@{/admin/stock/delete}" method="post" style="display: inline;">
+                    <input type="hidden" id="deleteItemId" name="id">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--    <script src="/js/bundle.min.js" th:src="@{/js/bundle.min.js}"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function editItem(id) {
+        fetch(`/admin/stock/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editId').value = data.id;
+                document.getElementById('editName').value = data.name;
+                document.getElementById('editCategory').value = data.category;
+                document.getElementById('editQuantity').value = data.quantity;
+                document.getElementById('editUnit').value = data.unit;
+                document.getElementById('editPrice').value = data.price;
+                new bootstrap.Modal(document.getElementById('editItemModal')).show();
+            });
+    }
+
+    function confirmDelete(id, name) {
+        document.getElementById('deleteItemId').value = id;
+        document.getElementById('deleteItemName').textContent = name;
+        new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header>
+    <h1>Welcome to the Home Page</h1>
+</header>
+<nav>
+    <ul>
+        <li><a th:href="@{/user/dashboard}">User Dashboard</a></li>
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li><a th:href="@{/logout}">Logout</a></li>
+    </ul>
+</nav>
+<main>
+    <p>This is the home page of the application. Use the navigation links above to explore.</p>
+</main>
+<footer>
+    <p>&copy; 2023 Your Application</p>
+</footer>
+</body>
+</html>
