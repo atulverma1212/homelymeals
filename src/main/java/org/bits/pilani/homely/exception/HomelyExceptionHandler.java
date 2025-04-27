@@ -52,6 +52,16 @@ public class HomelyExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                ex.getStatusCode().toString(),
+                ex.getReason(),
+                ex.getStatusCode().value()
+        );
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
+    }
+
 
     private ResponseEntity<ErrorResponse> getErrorResponse(HomelyException ex, HttpStatus status) {
         ErrorResponse error = new ErrorResponse(

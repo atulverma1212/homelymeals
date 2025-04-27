@@ -75,6 +75,51 @@ Once running, the application is available at:
 - **AWS Service Issues**: Verify AWS credentials are correct
 - **Container Won't Start**: Check logs with `docker logs <container_id>`
 
+## Test Reports
+
+The project is configured to generate detailed test reports using JUnit and JaCoCo for code coverage. These reports provide insights into test execution results and code coverage metrics.
+
+### Generating Test Reports
+
+To generate test reports, run the provided script:
+
+```bash
+# Make the script executable
+chmod +x scripts/generate-test-reports.sh
+
+# Run the script
+./scripts/generate-test-reports.sh
+```
+
+Alternatively, you can run the Maven command directly:
+
+```bash
+mvn clean test
+```
+
+### Viewing Test Reports
+
+After running the tests, the following reports are available:
+
+1. **JUnit Test Reports**:
+   - XML reports: `target/surefire-reports/*.xml`
+   - Text reports: `target/surefire-reports/*.txt`
+
+2. **JaCoCo Code Coverage Reports**:
+   - HTML report: `target/site/jacoco/index.html` (open in a browser)
+   - XML report: `target/site/jacoco/jacoco.xml`
+   - CSV report: `target/site/jacoco/jacoco.csv`
+
+The JaCoCo HTML report provides a user-friendly interface to explore code coverage metrics, including:
+- Line coverage
+- Branch coverage
+- Method coverage
+- Class coverage
+
+### Continuous Integration
+
+These test reports are particularly useful in CI/CD pipelines to track test results and code quality over time. The project's GitHub Actions workflow can be configured to publish these reports as artifacts.
+
 ## UML Diagrams
 
 The project includes UML diagrams to help understand the application architecture and behavior. These diagrams are located in the `src/main/resources/uml/` directory.
