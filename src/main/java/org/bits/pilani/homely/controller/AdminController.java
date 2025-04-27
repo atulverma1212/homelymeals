@@ -68,8 +68,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Please check the input values");
             return "redirect:/admin/dashboard";
         }
-        stockItem.setLastUpdated(LocalDateTime.now());
-        stockItemRepository.save(stockItem);
+        stockService.updateStockItem(stockItem);
         return "redirect:/admin/dashboard";
     }
 

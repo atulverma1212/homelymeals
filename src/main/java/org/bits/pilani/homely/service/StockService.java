@@ -7,6 +7,7 @@ import org.bits.pilani.homely.dto.StockItemResponse;
 import org.bits.pilani.homely.entity.StockItem;
 import org.bits.pilani.homely.enums.Setting;
 import org.bits.pilani.homely.enums.StockCategory;
+import org.bits.pilani.homely.exception.StockItemNotFoundException;
 import org.bits.pilani.homely.repository.StockItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
@@ -72,5 +73,17 @@ public class StockService {
         dto.setImageUrl(item.getImageUrl());
         dto.setInStock(item.getQuantity() > 0);
         return dto;
+    }
+
+    public void updateStockItem(StockItem stockItem) {
+        StockItem item = stockItemRepository.findById(stockItem.getId()).orElseThrow(() -> new StockItemNotFoundException("StockItem Not Found"));
+
+        item.setName(stockItem.getName());
+        item.setPrice(stockItem.getPrice());
+        item.setCategory(stockItem.getCategory());
+        item.setQuantity(stockItem.getQuantity());
+        item.setLastUpdated(LocalDateTime.now());
+        item.setUnit(stockItem.getUnit());
+        stockItemRepository.save(item);
     }
 }

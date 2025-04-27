@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bits.pilani.homely.dto.LoginRequest;
 import org.bits.pilani.homely.dto.LoginResponse;
+import org.bits.pilani.homely.entity.User;
+import org.bits.pilani.homely.repository.UserRepository;
 import org.bits.pilani.homely.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +27,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
@@ -39,8 +43,11 @@ public class AuthController {
             String roles = userDetails.getAuthorities().iterator().next().getAuthority();
             String token = jwtUtil.generateToken(userDetails.getUsername(), roles);
 
+            User user = userRepository.findByUsername(loginRequest.getUsername()).get();
+
             return ResponseEntity.ok(LoginResponse.builder()
                     .token(token)
+                    .userId(user.getId())
                 .username(userDetails.getUsername())
                 .role(userDetails.getAuthorities().iterator().next().getAuthority())
                 .message("Login successful")
