@@ -30,8 +30,8 @@ jobs:
         with:
           name: test-reports
           path: |
-            ${{ github.workspace }}/target/surefire-reports/
-            ${{ github.workspace }}/target/site/jacoco/
+            target/surefire-reports/
+            target/site/jacoco/
           retention-days: 7
 
 #  deploy:
