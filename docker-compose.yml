@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DATASOURCE_URL=jdbc:postgresql://db:5432/homely
+      - DATASOURCE_USERNAME=postgres
+      - DATASOURCE_PWD=postgres
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=homely
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
