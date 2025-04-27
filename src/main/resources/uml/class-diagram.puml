@@ -1,0 +1,179 @@
+@startuml
+' Class Diagram for Homely Application
+
+' Entities
+package "org.bits.pilani.homely.entity" {
+  class User {
+    -Long id
+    -String username
+    -String password
+    -String contactnumber
+    -Set<Role> roles
+  }
+
+  class Role {
+    -Long id
+    -String name
+  }
+
+  class Order {
+    -Long id
+    -User customer
+    -String customerName
+    -LocalDateTime orderDate
+    -OrderStatus status
+    -List<OrderItem> items
+    -BigDecimal totalAmount
+  }
+
+  class OrderItem {
+    -Long id
+    -Order order
+    -StockItem stockItem
+    -Double quantity
+    -BigDecimal unitPrice
+    -BigDecimal subtotal
+  }
+
+  class StockItem {
+    -Long id
+    -String name
+    -Double quantity
+    -String unit
+    -LocalDateTime lastUpdated
+    -StockCategory category
+    -BigDecimal price
+    -String imageUrl
+  }
+
+  class Setting {
+    -String name
+    -String value
+    -String description
+  }
+}
+
+' Enums
+package "org.bits.pilani.homely.enums" {
+  enum OrderStatus {
+    PENDING
+    CONFIRMED
+    PREPARING
+    READY
+    COMPLETED
+    OUT_FOR_DELIVERY
+    CANCELLED
+  }
+
+  enum StockCategory {
+    VEG
+    NON_VEG
+    DAIRY
+    SPICES
+    SNACKS
+  }
+}
+
+' Services
+package "org.bits.pilani.homely.service" {
+  class OrderService {
+    -OrderRepository orderRepository
+    -StockItemRepository stockItemRepository
+    -OrderRequestValidator orderRequestValidator
+    -OrderStateTransitionService stateTransitionService
+    -OrderStateFactory orderStateFactory
+    -UserService userService
+    -StateChangeNotifier stateChangeNotifier
+    -NotificationService notificationService
+    +void addStateChangeListener(StateChangeListener)
+    +Order createOrder(OrderRequest)
+    +List<Order> getCustomerOrders(Long)
+    +Order getOrder(Long)
+    +Order updateOrderStatus(Long, OrderStatus)
+    +void getAllOrders(String, Model)
+  }
+
+  class StockService {
+    -StockItemRepository stockItemRepository
+    -SettingService settingService
+    -ImageUploadService imageUploadService
+    +void populateStockItems(Model)
+    +void saveStockItem(StockItemRequest, MultipartFile)
+    +List<StockItemResponse> getAllStocks()
+    +void updateStockItem(StockItem)
+  }
+
+  class UserService {
+    -UserRepository userRepository
+    -RoleRepository roleRepository
+    -PasswordEncoder passwordEncoder
+    +SignupResponse signup(SignupRequest)
+    +User getCustomerById(Long)
+  }
+}
+
+' Controllers
+package "org.bits.pilani.homely.controller" {
+  class OrderController {
+    -OrderService orderService
+    +ResponseEntity<Order> createOrder(OrderRequest)
+    +ResponseEntity<Order> getOrder(Long)
+    +ResponseEntity<List<Order>> getCustomerOrders(Long)
+  }
+
+  class AuthController {
+    -AuthenticationManager authenticationManager
+    -JwtUtil jwtUtil
+    -UserRepository userRepository
+    +ResponseEntity<LoginResponse> login(LoginRequest)
+  }
+
+  class UserRestController {
+    -UserService userService
+    +ResponseEntity<SignupResponse> signup(SignupRequest)
+  }
+}
+
+' Repositories
+package "org.bits.pilani.homely.repository" {
+  interface OrderRepository {
+    +List<Order> findByCustomerId(Long)
+    +List<Order> findByStatusOrderByOrderDateDesc(OrderStatus)
+  }
+
+  interface StockItemRepository {
+  }
+
+  interface UserRepository {
+    +Optional<User> findByUsername(String)
+  }
+
+  interface RoleRepository {
+    +Optional<Role> findByName(String)
+  }
+
+  interface SettingRepository {
+  }
+}
+
+' Relationships
+User "1" -- "many" Role : has >
+Order "many" -- "1" User : placed by >
+Order "1" -- "many" OrderItem : contains >
+OrderItem "many" -- "1" StockItem : references >
+Order -- OrderStatus : has >
+StockItem -- StockCategory : has >
+
+OrderService -- OrderRepository : uses >
+OrderService -- StockItemRepository : uses >
+OrderService -- UserService : uses >
+StockService -- StockItemRepository : uses >
+StockService -- SettingService : uses >
+UserService -- UserRepository : uses >
+UserService -- RoleRepository : uses >
+
+OrderController -- OrderService : uses >
+AuthController -- UserRepository : uses >
+UserRestController -- UserService : uses >
+
+@enduml

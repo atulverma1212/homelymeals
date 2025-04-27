@@ -1,0 +1,63 @@
+@startuml
+' Sequence Diagram for Order Process
+
+actor "Customer" as customer
+participant "OrderController" as controller
+participant "OrderService" as service
+participant "OrderRequestValidator" as validator
+participant "UserService" as userService
+participant "StockItemRepository" as stockRepo
+participant "OrderRepository" as orderRepo
+participant "NotificationService" as notifService
+
+title Order Creation Process
+
+customer -> controller: POST /api/orders (OrderRequest)
+activate controller
+
+controller -> service: createOrder(OrderRequest)
+activate service
+
+service -> validator: validate(OrderRequest, errors)
+activate validator
+validator --> service: validation result
+deactivate validator
+
+alt validation failed
+    service --> controller: throw InvalidOrderException
+    controller --> customer: 400 Bad Request
+else validation passed
+    service -> userService: getCustomerById(customerId)
+    activate userService
+    userService --> service: User
+    deactivate userService
+
+    loop for each OrderItem in request
+        service -> stockRepo: findById(stockItemId)
+        activate stockRepo
+        stockRepo --> service: StockItem
+        deactivate stockRepo
+        
+        service -> service: create OrderItem
+        service -> service: calculate subtotal
+    end
+
+    service -> service: calculate total amount
+    service -> orderRepo: save(Order)
+    activate orderRepo
+    orderRepo --> service: saved Order
+    deactivate orderRepo
+
+    service -> notifService: sendOrderNotification("New order created: " + orderId)
+    activate notifService
+    notifService --> service: void
+    deactivate notifService
+
+    service --> controller: Order
+    controller --> customer: 200 OK (Order)
+end
+
+deactivate service
+deactivate controller
+
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+' State Diagram for Order Status
+
+title Order State Transitions
+
+[*] --> PENDING : Order Created
+
+PENDING --> CONFIRMED : Confirm Order
+PENDING --> CANCELLED : Cancel Order
+
+CONFIRMED --> PREPARING : Start Preparation
+CONFIRMED --> CANCELLED : Cancel Order
+
+PREPARING --> READY : Preparation Complete
+PREPARING --> CANCELLED : Cancel Order
+
+READY --> COMPLETED : Order Picked Up
+READY --> OUT_FOR_DELIVERY : Start Delivery
+
+OUT_FOR_DELIVERY --> COMPLETED : Delivery Complete
+OUT_FOR_DELIVERY --> CANCELLED : Delivery Failed
+
+COMPLETED --> [*]
+CANCELLED --> [*]
+
+@enduml

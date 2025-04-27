@@ -74,3 +74,24 @@ Once running, the application is available at:
 - **Database Connection Issues**: Ensure PostgreSQL is running and accessible
 - **AWS Service Issues**: Verify AWS credentials are correct
 - **Container Won't Start**: Check logs with `docker logs <container_id>`
+
+## UML Diagrams
+
+The project includes UML diagrams to help understand the application architecture and behavior. These diagrams are located in the `src/main/resources/uml/` directory.
+
+### Available Diagrams
+
+1. **Class Diagram** (`class-diagram.puml`): Shows the main classes, their attributes, methods, and relationships.
+2. **Sequence Diagram** (`sequence-diagram.puml`): Illustrates the order creation process and the interactions between components.
+3. **State Diagram** (`state-diagram.puml`): Shows the possible states of an order and the transitions between them.
+
+### How to View the Diagrams
+
+To view the diagrams, you need to use a PlantUML renderer. Here are some options:
+
+1. **Online PlantUML Editor**: Copy the content of the `.puml` file and paste it into the [PlantUML Online Editor](http://www.plantuml.com/plantuml/uml/).
+2. **IntelliJ IDEA**: Install the PlantUML plugin and view the diagrams directly in the IDE.
+3. **VS Code**: Install the PlantUML extension and view the diagrams directly in the editor.
+4. **Command Line**: Use the PlantUML command-line tool to generate images from the PlantUML files.
+
+For more detailed information about the diagrams, please refer to the [UML README](src/main/resources/uml/README.md).
